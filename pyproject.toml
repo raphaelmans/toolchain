@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "machine-toolchain"
+version = "0.1.0"
+description = "Agent-friendly toolchain audit and migration planner"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+[project.scripts]
+toolchain = "toolchain.__main__:main"
+
+[tool.setuptools]
+packages = ["toolchain"]
