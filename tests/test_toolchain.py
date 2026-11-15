@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 from toolchain.__main__ import audit, catalog, make_plan
 
@@ -25,5 +27,52 @@ class ToolchainTest(unittest.TestCase):
         data = audit()
         self.assertEqual(data['schema_version'], 1)
         self.assertTrue(all(t['status'] == 'missing' for t in data['tools']))
+
+    def test_npm_executable_discovery_and_planning(self):
+        packages = {
+            'Playwright CLI': ('playwright-cli', 'npm:@playwright/cli'),
+            'Obsidian headless': ('ob', 'npm:obsidian-headless'),
+        }
+        with TemporaryDirectory() as directory:
+            for command, _ in packages.values():
+                executable = Path(directory) / command
+                executable.write_text('#!/bin/sh\nexit 0\n')
+                executable.chmod(0o755)
+            for platform in ('darwin', 'linux'):
+                with self.subTest(platform=platform), \
+                     patch('toolchain.__main__.platform_name', return_value=platform), \
+                     patch.dict('os.environ', {'PATH': directory}):
+                    rows = {row['name']: row for row in audit()['tools']}
+                    selected = [t for t in catalog() if t.name in packages or t.name == 'playwright-cli']
+                    actions = {action['name']: action for action in make_plan(selected)['actions']}
+                    for name, (command, spec) in packages.items():
+                        expected_paths = [str(Path(directory) / command)]
+                        self.assertEqual(rows[name]['status'], 'found')
+                        self.assertEqual(rows[name]['paths'], expected_paths)
+                        self.assertEqual(actions[name]['existing_paths'], expected_paths)
+                        self.assertEqual(actions[name]['command'], ['mise', 'use', '--global', f'{spec}@latest'])
+                    legacy = rows['playwright-cli']
+                    self.assertEqual(legacy['paths'], [])
+                    self.assertTrue(legacy['requires_verification'])
+                    self.assertEqual((legacy['owner'], legacy['spec'], legacy['pin']), ('mise', 'npm:playwright-cli', 'latest'))
+                    self.assertEqual(actions['playwright-cli']['command'], [])
+                    self.assertIn('standard', actions['playwright-cli']['note'])
+
+    @patch('toolchain.__main__.platform_name', return_value='linux')
+    @patch('toolchain.__main__.paths', return_value=[])
+    def test_updater_prerequisites_follow_selection(self, _, __):
+        settings = {'Claude Code': 'DISABLE_AUTOUPDATER=1', 'Grok': 'GROK_DISABLE_AUTOUPDATER=1'}
+        for names in ((), ('Node.js',), ('Claude Code',), ('Grok',), ('Claude Code', 'Grok')):
+            with self.subTest(selected=names):
+                plan = make_plan([t for t in catalog() if t.name in names])
+                words = ' '.join(plan['prerequisites']).split()
+                for name, setting in settings.items():
+                    self.assertEqual(setting in words, name in names)
+                    if name in names:
+                        prerequisite = next(p for p in plan['prerequisites'] if setting in p.split())
+                        self.assertIn('Manually persist', prerequisite)
+                        self.assertIn(name, prerequisite)
+                self.assertEqual(len(plan['actions']), len(names))
+                self.assertTrue(all(a['command'][:3] == ['mise', 'use', '--global'] for a in plan['actions']))
 
 if __name__ == '__main__': unittest.main()

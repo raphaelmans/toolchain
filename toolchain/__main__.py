@@ -15,6 +15,8 @@ def catalog():
     return [t for t in TOOLS if platform_name() in t.platforms]
 
 def paths(command):
+    if not command:
+        return []
     result = []
     for directory in os.get_exec_path():
         p = os.path.join(directory, command)
@@ -32,11 +34,17 @@ def audit():
 
 def make_plan(selected):
     actions = []
+    prerequisites = ['Install the platform package manager and mise 2026.11+ first.', 'Ensure mise is activated in the shell.', 'Review unverified packages and existing owners.']
     for t in selected:
         found = paths(t.command)
         note = t.note
-        if t.owner == 'mise':
+        if t.requires_verification:
+            argv = []
+        elif t.owner == 'mise':
             argv = ['mise', 'use', '--global', f'{t.spec}@{t.pin}']
+            updater_setting = {'claude': 'DISABLE_AUTOUPDATER=1', 'grok': 'GROK_DISABLE_AUTOUPDATER=1'}.get(t.spec)
+            if updater_setting:
+                prerequisites.append(f'Manually persist {updater_setting} in the environment used to launch {t.name} before installation or use, so mise owns updates.')
             if found and not any('/mise/' in p for p in found):
                 note += ' Existing executable may have another owner; inspect before migration.'
             if t.name == 'Neovim' and platform_name() == 'linux': note += ' Check Omarchy config compatibility first.'
@@ -45,7 +53,7 @@ def make_plan(selected):
         else: argv = []
         actions.append({'name': t.name, 'owner': t.owner, 'command': argv, 'existing_paths': found, 'note': note.strip()})
     return {'schema_version': 1, 'platform': platform_name(), 'actions': actions,
-            'prerequisites': ['Install the platform package manager and mise 2026.11+ first.', 'Ensure mise is activated in the shell.', 'Review unverified packages and existing owners.'],
+            'prerequisites': prerequisites,
             'verification': ['mise doctor', 'mise ls', 'Check command paths and versions in interactive and non-interactive shells.']}
 
 def select(stdscr, items):

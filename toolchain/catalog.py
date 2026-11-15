@@ -10,6 +10,7 @@ class Tool:
     pin: str = ''
     platforms: tuple = ('darwin', 'linux')
     note: str = ''
+    requires_verification: bool = False
 
 def mise(group, lines):
     return [Tool(name, group, cmd, 'mise', spec, pin) for name, cmd, spec, pin in (line.split('|') for line in lines.strip().splitlines())]
@@ -47,9 +48,11 @@ direnv|direnv|direnv|2
 Worktrunk|wt|worktrunk|latest
 Turborepo|turbo|npm:turbo|2
 Portless|portless|npm:portless|latest
-Playwright CLI|playwright|npm:@playwright/cli|latest
-playwright-cli|playwright-cli|npm:playwright-cli|latest
-Obsidian headless|obsidian-headless|npm:obsidian-headless|latest''')
+Playwright CLI|playwright-cli|npm:@playwright/cli|latest
+Obsidian headless|ob|npm:obsidian-headless|latest''')
+TOOLS += [Tool('playwright-cli','Developer tools','','mise','npm:playwright-cli','latest',
+               note='Deprecated package has no CLI executable. Manually reconcile the referenced standard and verify the intended replacement before installation.',
+               requires_verification=True)]
 TOOLS += [Tool('Defuddle','Developer tools','defuddle','manual',note='Verify npm package is the intended CLI.')]
 TOOLS += mise('Cloud and services', '''Supabase|supabase|supabase|3
 Stripe|stripe|stripe|1
