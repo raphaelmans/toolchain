@@ -27,7 +27,6 @@ Deno|deno|deno|2''')
 TOOLS += mise('AI and agents', '''Codex|codex|npm:@openai/codex|latest
 Claude Code|claude|claude|latest
 Grok|grok|grok|latest
-OpenCode|opencode|npm:opencode-ai|1
 OpenSpec|openspec|npm:@fission-ai/openspec|1
 Herdr CLI|herdr|github:herdrdev/herdr|latest
 Agent Desktop|agent-desktop|github:vercel-labs/agent-desktop|latest
@@ -35,6 +34,7 @@ Agent Browser|agent-browser|agent-browser|latest
 OpenClaw|openclaw|npm:openclaw|latest
 Skillshare|skillshare|github:runkids/skillshare|latest
 nano-pdf|nano-pdf|pipx:nano-pdf|latest''')
+TOOLS += [Tool('OpenCode','AI and agents','opencode','vendor',note='Use the OpenCode vendor installer and updater; mise npm:opencode-ai skips the postinstall that fetches the binary.')]
 TOOLS += [Tool('treg','AI and agents','treg','manual',note='Verify pipx:tools-registry[proxy] extras syntax.'), Tool('T3 CLI','AI and agents','t3','mise','npm:t3','latest',('linux',)), Tool('T3 Code app','AI and agents','t3','vendor',platforms=('darwin',),note='Provided by T3 Code desktop app.')]
 TOOLS += mise('Developer tools', '''GitHub CLI|gh|gh|2
 ripgrep|rg|ripgrep|15

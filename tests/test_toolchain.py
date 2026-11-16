@@ -12,6 +12,14 @@ class ToolchainTest(unittest.TestCase):
         self.assertEqual(next(x.owner for x in tools if x.name == 'Git'), 'vendor')
         self.assertFalse(any(x.spec == 'npm:t3' for x in tools))
 
+    @patch('toolchain.__main__.paths', return_value=[])
+    def test_opencode_is_vendor_owned_on_every_platform(self, _):
+        for platform in ('darwin', 'linux'):
+            with self.subTest(platform=platform), patch('toolchain.__main__.platform_name', return_value=platform):
+                tool = next(t for t in catalog() if t.name == 'OpenCode')
+                self.assertEqual((tool.owner, tool.spec, tool.pin), ('vendor', '', ''))
+                self.assertEqual(make_plan([tool])['actions'][0]['command'], [])
+
     @patch('toolchain.__main__.platform_name', return_value='linux')
     @patch('toolchain.__main__.paths', return_value=[])
     def test_plan_uses_pins_and_leaves_manual_items_manual(self, _, __):
