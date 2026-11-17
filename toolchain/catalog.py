@@ -34,8 +34,9 @@ Agent Browser|agent-browser|agent-browser|latest
 OpenClaw|openclaw|npm:openclaw|latest
 Skillshare|skillshare|github:runkids/skillshare|latest
 nano-pdf|nano-pdf|pipx:nano-pdf|latest''')
-TOOLS += [Tool('OpenCode','AI and agents','opencode','vendor',note='Use the OpenCode vendor installer and updater; mise npm:opencode-ai skips the postinstall that fetches the binary.')]
-TOOLS += [Tool('treg','AI and agents','treg','manual',note='Verify pipx:tools-registry[proxy] extras syntax.'), Tool('T3 CLI','AI and agents','t3','mise','npm:t3','latest',('linux',)), Tool('T3 Code app','AI and agents','t3','vendor',platforms=('darwin',),note='Provided by T3 Code desktop app.')]
+TOOLS += [Tool('OpenCode','AI and agents','opencode','vendor',note='Install with curl -fsSL https://opencode.ai/install | bash (to ~/.opencode/bin); update with opencode upgrade. mise npm:opencode-ai skips the postinstall that fetches the binary.')]
+TOOLS += [Tool('treg','AI and agents','treg','mise','pipx:tools-registry[proxy]','latest',note='Verify pipx:tools-registry[proxy] extras syntax.',requires_verification=True), Tool('T3 CLI','AI and agents','t3','mise','npm:t3','latest',('linux',)),
+          Tool('T3 CLI and service','AI and agents','t3','vendor',platforms=('darwin',),note='t3 launcher in ~/.local/bin, versions in ~/.t3/runtime; update with t3 update. t3 service install runs the server headless; the T3 Code desktop app (own updater, same version as t3) attaches as a client with Local environment off.')]
 TOOLS += mise('Developer tools', '''GitHub CLI|gh|gh|2
 ripgrep|rg|ripgrep|15
 fd|fd|fd|10
@@ -53,32 +54,36 @@ Obsidian headless|ob|npm:obsidian-headless|latest''')
 TOOLS += [Tool('playwright-cli','Developer tools','','mise','npm:playwright-cli','latest',
                note='Deprecated package has no CLI executable. Manually reconcile the referenced standard and verify the intended replacement before installation.',
                requires_verification=True)]
-TOOLS += [Tool('Defuddle','Developer tools','defuddle','manual',note='Verify npm package is the intended CLI.')]
+TOOLS += [Tool('Defuddle','Developer tools','defuddle','mise','npm:defuddle','latest',note='Verify npm package is the intended CLI.',requires_verification=True)]
 TOOLS += mise('Cloud and services', '''Supabase|supabase|supabase|3
 Stripe|stripe|stripe|1
 AWS CLI|aws|aws-cli|2
 kubectl|kubectl|kubectl|latest
 gcloud|gcloud|gcloud|latest
 Vercel|vercel|npm:vercel|latest
+Notion CLI|ntn|npm:ntn|latest
 rclone|rclone|rclone|1
 dotenvx|dotenvx|dotenvx|2
 yt-dlp|yt-dlp|yt-dlp|latest''')
 for name, cmd, mac, linux, note in [
- ('Git','git','','git','Apple Git on macOS; retain system copy.'),
- ('Docker','docker','docker','docker','Engine is separate.'),
- ('Docker Compose','docker-compose','docker-compose','docker-compose','Engine is separate.'),
+ ('Git','git','','git','Apple Git on macOS; retain system copy. Install Homebrew git only if a newer version is needed.'),
+ ('Docker','docker','docker','docker','Engine is separate: a desktop engine on macOS, the Docker service on Omarchy.'),
+ ('Docker Compose','docker-compose','docker-compose','docker-compose','Engine is separate: a desktop engine on macOS, the Docker service on Omarchy.'),
  ('PostgreSQL','psql','postgresql@15','postgresql','Existing clusters require a separate migration decision.'),
  ('ffmpeg','ffmpeg','ffmpeg','ffmpeg',''), ('ImageMagick','magick','imagemagick','imagemagick',''),
  ('GnuPG','gpg','gnupg','gnupg',''), ('SQLite','sqlite3','sqlite','sqlite',''), ('tree','tree','tree','tree',''),
  ('autojump','autojump','autojump','','Verify Arch source.'), ('ngrok','ngrok','ngrok','','Verify Arch source.'),
- ('CocoaPods','pod','cocoapods','','macOS only.'), ('Tailscale','tailscale','','tailscale','macOS uses vendor app.')]:
+ ('CocoaPods','pod','cocoapods','','macOS only.'), ('Tailscale','tailscale','','tailscale','macOS uses vendor app; keep the CLI paired with its service.')]:
     if mac: TOOLS.append(Tool(name,'System utilities',cmd,'brew',mac,platforms=('darwin',),note=note))
     elif name in ('Git','Tailscale'): TOOLS.append(Tool(name,'System utilities',cmd,'vendor',platforms=('darwin',),note=note))
     if linux: TOOLS.append(Tool(name,'System utilities',cmd,'pacman',linux,platforms=('linux',),note=note))
     elif name in ('autojump','ngrok'): TOOLS.append(Tool(name,'System utilities',cmd,'manual',platforms=('linux',),note=note))
 TOOLS += [Tool(name,'Vendor apps',cmd,'vendor',note=note) for name,cmd,note in [
  ('mise','mise','Install from mise.run; version 2026.11 or newer required.'),
- ('Cursor Agent','cursor-agent','Use Cursor vendor installer and updater.'),
+ ('Cursor Agent','cursor-agent','Install with curl https://cursor.com/install -fsS | bash; also provides agent. Grok’s own installer links an agent command over it, so Grok comes from mise only.'),
  ('Cursor CLI','cursor','Provided by the Cursor app.'),
- ('Herdr app','herdr-app','Use the Herdr app installer; separate from Herdr CLI.'),
+ ('Herdr app','herdr-app','Install Herdr app and Herdr Core (herdr-app, herdr-core, hc) with curl -fsSL https://releases.herdr.dev/app/install.sh | sh; updates through the app. Separate from the mise-managed Herdr CLI.'),
  ('browse','browse','Use browse’s installer; mise fx is unrelated.')]]
+TOOLS += [Tool(name,'Built from our repos',cmd,'manual',note=note) for name,cmd,note in [
+ ('lific','lific','Build from raphaelmans/lific (our fork; cargo install lific and upstream releases install the original): cd web && bun install --frozen-lockfile --ignore-scripts && bun run build && cd .. && cargo build --release --locked, then ln -sf "$PWD/target/release/lific" ~/.local/bin/lific. Update with git pull and rebuild.'),
+ ('herdr-viz','herdr-viz','Link from raphaelmans/herdr-app cloned to ~/.config/herdr-app: ln -sf ~/.config/herdr-app/mods/viz/herdr-viz ~/.local/bin/herdr-viz. Runs on mise Node; update with git pull there.')]]

@@ -83,4 +83,18 @@ class ToolchainTest(unittest.TestCase):
                 self.assertEqual(len(plan['actions']), len(names))
                 self.assertTrue(all(a['command'][:3] == ['mise', 'use', '--global'] for a in plan['actions']))
 
+    @patch('toolchain.__main__.paths', return_value=[])
+    def test_standard_sync_entries(self, _):
+        for platform in ('darwin', 'linux'):
+            with self.subTest(platform=platform), patch('toolchain.__main__.platform_name', return_value=platform):
+                tools = {t.name: t for t in catalog()}
+                actions = {a['name']: a for a in make_plan(list(tools.values()))['actions']}
+                self.assertEqual(actions['Notion CLI']['command'], ['mise', 'use', '--global', 'npm:ntn@latest'])
+                for name, spec in (('treg', 'pipx:tools-registry[proxy]'), ('Defuddle', 'npm:defuddle')):
+                    self.assertTrue(tools[name].requires_verification)
+                    self.assertEqual((tools[name].owner, tools[name].spec), ('mise', spec))
+                    self.assertEqual(actions[name]['command'], [])
+                for name in ('lific', 'herdr-viz'):
+                    self.assertEqual((tools[name].owner, actions[name]['command']), ('manual', []))
+
 if __name__ == '__main__': unittest.main()
