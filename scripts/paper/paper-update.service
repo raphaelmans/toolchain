@@ -1,0 +1,8 @@
+[Unit]
+Description=Update Paper Desktop AppImage
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/update-paper

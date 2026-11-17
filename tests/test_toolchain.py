@@ -20,6 +20,18 @@ class ToolchainTest(unittest.TestCase):
                 self.assertEqual((tool.owner, tool.spec, tool.pin), ('vendor', '', ''))
                 self.assertEqual(make_plan([tool])['actions'][0]['command'], [])
 
+    @patch('toolchain.__main__.paths', return_value=[])
+    def test_paper_is_vendor_owned_on_every_platform(self, _):
+        for platform in ('darwin', 'linux'):
+            with self.subTest(platform=platform), patch('toolchain.__main__.platform_name', return_value=platform):
+                tool = next(t for t in catalog() if t.name == 'Paper')
+                self.assertEqual((tool.owner, tool.command, tool.group), ('vendor', 'paper-desktop', 'Vendor apps'))
+                action = make_plan([tool])['actions'][0]
+                self.assertEqual(action['command'], [])
+                self.assertIn('update-paper.sh', action['note'])
+                self.assertIn('https://mcp.paper.design', action['note'])
+                self.assertIn('download.paper.design/linux/appImage', action['note'])
+
     @patch('toolchain.__main__.platform_name', return_value='linux')
     @patch('toolchain.__main__.paths', return_value=[])
     def test_plan_uses_pins_and_leaves_manual_items_manual(self, _, __):
