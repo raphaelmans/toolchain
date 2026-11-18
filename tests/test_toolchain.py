@@ -36,7 +36,7 @@ class ToolchainTest(unittest.TestCase):
     @patch('toolchain.__main__.paths', return_value=[])
     def test_plan_uses_pins_and_leaves_manual_items_manual(self, _, __):
         tools = catalog()
-        chosen = [next(t for t in tools if t.name == n) for n in ('Node.js','treg','Git')]
+        chosen = [next(t for t in tools if t.name == n) for n in ('Node.js','Defuddle','Git')]
         actions = make_plan(chosen)['actions']
         self.assertEqual(actions[0]['command'], ['mise','use','--global','node@26'])
         self.assertEqual(actions[1]['command'], [])
@@ -102,10 +102,12 @@ class ToolchainTest(unittest.TestCase):
                 tools = {t.name: t for t in catalog()}
                 actions = {a['name']: a for a in make_plan(list(tools.values()))['actions']}
                 self.assertEqual(actions['Notion CLI']['command'], ['mise', 'use', '--global', 'npm:ntn@latest'])
-                for name, spec in (('treg', 'pipx:tools-registry[proxy]'), ('Defuddle', 'npm:defuddle')):
-                    self.assertTrue(tools[name].requires_verification)
-                    self.assertEqual((tools[name].owner, tools[name].spec), ('mise', spec))
-                    self.assertEqual(actions[name]['command'], [])
+                self.assertFalse(tools['treg'].requires_verification)
+                self.assertEqual(actions['treg']['command'], ['mise', 'use', '--global', 'pipx:tools-registry[proxy]@latest'])
+                self.assertTrue(tools['Defuddle'].requires_verification)
+                self.assertEqual((tools['Defuddle'].owner, tools['Defuddle'].spec), ('mise', 'npm:defuddle'))
+                self.assertEqual(actions['Defuddle']['command'], [])
+                self.assertNotIn('autojump', tools)
                 for name in ('lific', 'herdr-viz'):
                     self.assertEqual((tools[name].owner, actions[name]['command']), ('manual', []))
 
