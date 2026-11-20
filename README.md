@@ -15,10 +15,14 @@ Or install with `python3 -m pip install .` and use `toolchain` in place of `pyth
 
 In the selector, move with arrows or j/k; space toggles an item, **g** toggles the current semantic group, **a** selects all, **n** clears all, and Enter prints a reviewable JSON plan. The selector starts with nothing selected. `catalog --json` exposes the platform-filtered catalog for agents. The plan contains argument arrays, existing paths, notes, prerequisites and verification steps. It never runs commands.
 
+## Shared mise config
+
+The global mise config for macOS and Omarchy lives in `dotfiles/mise/config.toml`. Link `~/.config/mise/config.toml` to its absolute path in your checkout. Back up and compare any existing config before linking. Commit and push shared edits, then run `git pull --ff-only` and `mise install` on the other machine. The shared config accepts releases immediately. Version ranges and `latest` resolve at install time.
+
 ## Agent workflow
 
 1. Run `audit --json`, inspect discovered paths and compare them with the catalog. PATH presence alone does not prove package ownership, version compliance or absence of other copies. Inspect package managers and `mise ls` as needed.
-2. Ask the person to choose tools through `select`, or construct a plan from an explicit selection. Review the commands, platform, pin and notes. Install the package manager and mise 2026.11+ first; keep mise's release-age delay enabled.
+2. Ask the person to choose tools through `select`, or construct a plan from an explicit selection. Review the commands, platform, pin and notes. Install the package manager and mise 2026.11+ first.
 3. Execute only approved, understood commands. The planner does not uninstall existing installations or change shell configuration: identify package ownership and dependencies first. Preserve system runtimes and services. Migrating PostgreSQL clusters requires a separate decision. Verify uncertain entries (treg, Defuddle and the deprecated playwright-cli package) and Omarchy Neovim compatibility before installing. Entries marked `requires_verification` retain their recorded owner and pin but produce no installation command until the standard is reconciled.
 4. Activate mise in the user's shell, then check `mise doctor`, `mise ls`, command paths and versions in interactive and non-interactive shells. Report unresolved ownership, duplicates and failures. Do not install pending, dropped or per-project tools from the reference as global tools.
 
